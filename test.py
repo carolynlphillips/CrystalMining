@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import extractdata
-import rdf
-import extractClusters
-import fourierdescriptors as fd
+import feature_extraction.extractdata as extractdata
+import feature_extraction.rdf as rdf
+import feature_extraction.extractClusters as extractClusters
+import feature_extraction.fourierdescriptors as fd
 
 X=extractdata.parseHOOMDxml()
 
