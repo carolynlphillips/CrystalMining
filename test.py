@@ -25,9 +25,8 @@ plt.xlabel('r')
 plt.ylabel('RDF')
 
 
-# peakline is dependent on the scaling of the histogram!  So either need to get this right or pick a new peak line
-#  Same is true for the other parameters!!!
-valley,peaks = rdf.getPeaks(15., num_peaks=2)
+#  Using Parameters of Soft Matter Paper (Phillips,2013) - Section 3.1.1
+valley,peaks = rdf.getPeaks(peak_line=15., integrated_peak_fraction =0.1, fraction_valley= 0.5, num_peaks=2)
 
 
 # Extract Clusters

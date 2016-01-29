@@ -88,47 +88,80 @@ class RDF:
 
     # Based on gofr_helper.h of original code
     # Returns the index and radial position of the valleys and peaks of the histogram
-    # If integratedpeak_fraction is provided, then will not include peaks that are too small
+    # If integrated_peak_fraction is provided, then will not include peaks that are too small
     
-    def getPeaks(self, peak_line, integratedpeak_fraction=None, num_peaks=None):
+    # Note - An improvement to this method may be to fit a curve to the rdf and extract peaks and valleys from it.  May be more resilient to noise!
+    
+    def getPeaks(self, peak_line, integrated_peak_fraction=None, num_peaks=None, fraction_valley=None):
 
         zero=peak_line
     
-        # Could make valley and peak structs
+    
         valley = [];
-        for i in range(1,self.maxbin):
+        maxes = []
+        mins = []
+        for i in range(1,self.maxbin-1):
+        
+            # We collect local maximums and local minimums over the range until the rdf drops below the zero line
+            
+            if self.hist[i] > zero and fraction_valley:
+                # (Very) Local Maximum
+                if self.hist[i-1] < self.hist[i] and self.hist[i+1] < self.hist[i]:
+                    maxes.append(rdf_position(i,self.x_i[i],self.hist[i]))
+        
+                # (Very) Local Minimum
+                if self.hist[i-1] > self.hist[i] and self.hist[i+1] > self.hist[i]:
+                    mins.append(rdf_position(i,self.x_i[i],self.hist[i]))
+
+            #Valley Criteria #1 - GOFR Drops to Zero
             if self.hist[i] < zero and not(self.hist[i-1] < zero) :
-                #valley.append((i,self.x_i[i]))
+                
+                # Valley Criteria #2 - Large Max to Min Drop
+                if len(maxes) > 2 :  # (must be at least two maxes)
+                    for ind in range(len(maxes)-1):
+                    
+                        drop = max[ind].height - min[ind].height
+                        rise = max[ind+1].height - min[ind].height
+                        if drop > max[ind].height * fraction_valley and rise > max[ind+1].height*fraction_valley :
+            
+                            valley.append(min[ind])
+            
+            
                 valley.append(rdf_position(i,self.x_i[i],self.hist[i]))
+                maxes = []
+                mins = []
             
 
         if len(valley)==1:
             print "Warning Simulation may be too hot."
         
         Num_valleys = len(valley)
+        
+        
 
         # Check the volume under the peak
-        # Check the peak height
-        integrated_peak =np.zeros(Num_valleys)
-        #peak_height = np.zeros(Num_valleys)
-        
+        integrated_peak = []
         peak = [];
         j = 0
         tmp = copy.copy(valley[0])
-        
+        tmp_integrate = 0
+
+
+        # Valley Criteria #3 - Must have sufficient integrated volume under prior peak
         for i in range(self.maxbin):
             if j < Num_valleys:
                 
-                if self.hist[i] > zero : integrated_peak[j] += self.hist[i]
+                # Only integrating values over zero line
+                if self.hist[i] > zero : tmp_integrate += self.hist[i]
                 
-                #if self.hist[i] > peak_height[j]:
+                # Looking for the peak over the interval between the valleys
                 if self.hist[i] > tmp.height :
                     tmp.setValues(i,self.x_i[i],self.hist[i])
-
-                    #peak[j] = (i,self.x_i[i])
-                    
+                
                 if i == valley[j].index:
                     peak.append(tmp)
+                    integrated_peak.append(tmp_integrate)
+                    tmp_integrate = 0;
                     j += 1
                     if j < Num_valleys: tmp = copy.copy(valley[j])
                     
@@ -141,10 +174,10 @@ class RDF:
         index, max_integrated_peak = max(enumerate(integrated_peak), key=operator.itemgetter(1))
         print "Peak", index+1, "has the largest volume", max_integrated_peak
 
-        if integratedpeak_fraction:
+        if integrated_peak_fraction:
             # Remove peaks that are too small
             for j in range(Num_valleys):
-                if integrated_peak[j] < integratedpeak_fraction * max_integrated_peak:
+                if integrated_peak[j] < integrated_peak_fraction * max_integrated_peak:
                     valley[j]= []
                     peak[j] = []
                     integrated_peak[j] = []
