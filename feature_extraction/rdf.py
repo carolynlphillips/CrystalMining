@@ -186,8 +186,9 @@ class RDF:
             peak_height = [x.height for x in peak]
             index, max_peak = max(enumerate(peak_height), key=operator.itemgetter(1))
             print "Peak", index+1, "has the highest peak of value", max_peak, "at radial position", peak[index].radial_position
-
-            index, max_integrated_peak = max(enumerate(integrated_peak), key=operator.itemgetter(1))
+        
+        index, max_integrated_peak = max(enumerate(integrated_peak), key=operator.itemgetter(1))
+        if verbose:
             print "Peak", index+1, "has the largest volume", max_integrated_peak, "at radial position", peak[index].radial_position
 
         if integrated_peak_fraction:
