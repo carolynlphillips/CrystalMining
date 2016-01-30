@@ -130,11 +130,11 @@ class RDF:
                 if len(maxes) > 2 :  # (must be at least two maxes)
                     for ind in range(len(maxes)-1):
                     
-                        drop = max[ind].height - min[ind].height
-                        rise = max[ind+1].height - min[ind].height
-                        if drop > max[ind].height * fraction_valley and rise > max[ind+1].height*fraction_valley :
+                        drop = maxes[ind].height - mins[ind].height
+                        rise = maxes[ind+1].height - mins[ind].height
+                        if drop > maxes[ind].height * fraction_valley and rise > maxes[ind+1].height*fraction_valley :
             
-                            valley.append(min[ind])
+                            valley.append(mins[ind])
             
                             if verbose:
                                 print "Criteria 2: Adding Valley at ",valley[-1].radial_position
