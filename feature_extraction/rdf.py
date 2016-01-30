@@ -38,6 +38,7 @@ class RDF:
     # Calculate the pair distribution function histogram
     # Determine Normalization Factor for each Bin from
     #~/HoomdWork/smac/src/diagnostics.cpp
+    # Note.  Produces same g(r) as VMD analysis
     
     def calculate(self, coordinates, L, N):
 
@@ -59,6 +60,14 @@ class RDF:
             dd = coordinate_helper.pbc(dd,L)
 
             rij = np.linalg.norm(dd, axis=1)
+            
+            # DEBUGGING
+            mask = rij < 0.5
+            if sum(mask) :
+                print
+                print coordinates[mask], np.roll(coordinates,rollval,axis=0)[mask], dd[mask]
+            
+            
             bin = map(makeint, rij/self.dr)
 
             for b in bin:
@@ -92,7 +101,7 @@ class RDF:
     
     # Note - An improvement to this method may be to fit a curve to the rdf and extract peaks and valleys from it.  May be more resilient to noise!
     
-    def getPeaks(self, peak_line, integrated_peak_fraction=None, num_peaks=None, fraction_valley=None):
+    def getPeaks(self, peak_line, integrated_peak_fraction=None, num_peaks=None, fraction_valley=None, verbose = False):
 
         zero=peak_line
     
@@ -108,6 +117,7 @@ class RDF:
                 # (Very) Local Maximum
                 if self.hist[i-1] < self.hist[i] and self.hist[i+1] < self.hist[i]:
                     maxes.append(rdf_position(i,self.x_i[i],self.hist[i]))
+                
         
                 # (Very) Local Minimum
                 if self.hist[i-1] > self.hist[i] and self.hist[i+1] > self.hist[i]:
@@ -126,10 +136,15 @@ class RDF:
             
                             valley.append(min[ind])
             
+                            if verbose:
+                                print "Criteria 2: Adding Valley at ",valley[-1].radial_position
+            
             
                 valley.append(rdf_position(i,self.x_i[i],self.hist[i]))
                 maxes = []
                 mins = []
+                if verbose:
+                        print "Criteria 1: Adding Valley at ",valley[-1].radial_position
             
 
         if len(valley)==1:
@@ -167,20 +182,22 @@ class RDF:
                     
 
         # Print a few statistics to the screen
-        peak_height = [x.height for x in peak]
-        index, max_peak = max(enumerate(peak_height), key=operator.itemgetter(1))
-        print "Peak", index+1, "has the heighest peak of value", max_peak
+        if verbose:
+            peak_height = [x.height for x in peak]
+            index, max_peak = max(enumerate(peak_height), key=operator.itemgetter(1))
+            print "Peak", index+1, "has the highest peak of value", max_peak, "at radial position", peak[index].radial_position
 
-        index, max_integrated_peak = max(enumerate(integrated_peak), key=operator.itemgetter(1))
-        print "Peak", index+1, "has the largest volume", max_integrated_peak
+            index, max_integrated_peak = max(enumerate(integrated_peak), key=operator.itemgetter(1))
+            print "Peak", index+1, "has the largest volume", max_integrated_peak, "at radial position", peak[index].radial_position
 
         if integrated_peak_fraction:
             # Remove peaks that are too small
-            for j in range(Num_valleys):
+            for j in range(Num_valleys-1,-1,-1):
                 if integrated_peak[j] < integrated_peak_fraction * max_integrated_peak:
-                    valley[j]= []
-                    peak[j] = []
-                    integrated_peak[j] = []
+                    if verbose: print "Dropping Peak ", j
+                    valley.pop(j)
+                    peak.pop(j)
+                    integrated_peak.pop(j)
 
         if num_peaks:
             valley = valley[:num_peaks]
