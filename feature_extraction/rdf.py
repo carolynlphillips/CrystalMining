@@ -127,11 +127,14 @@ class RDF:
             if self.hist[i] < zero and not(self.hist[i-1] < zero) :
                 
                 # Valley Criteria #2 - Large Max to Min Drop
-                if len(maxes) > 2 :  # (must be at least two maxes)
+                if len(maxes) > 1 :  # (must be at least two maxes)
                     for ind in range(len(maxes)-1):
                     
                         drop = maxes[ind].height - mins[ind].height
                         rise = maxes[ind+1].height - mins[ind].height
+                        
+                        print rise, drop
+                        
                         if drop > maxes[ind].height * fraction_valley and rise > maxes[ind+1].height*fraction_valley :
             
                             valley.append(mins[ind])
@@ -203,6 +206,10 @@ class RDF:
         if num_peaks:
             valley = valley[:num_peaks]
             peak = peak[:num_peaks]
+    
+        if verbose:
+            for i, v in enumerate(valley):
+                print "Valley Cutoff", i, ":", v.radial_position
 
         return valley,peak
 
