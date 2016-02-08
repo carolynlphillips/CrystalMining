@@ -16,6 +16,9 @@ def fourier2D(coordinates,L,frequencies):
     
     N = coordinates.shape[0]-1;
     
+    if N == 0:
+        return [0]
+    
     # Note.  The first coordinates is the center particle.
     #Translate all coordinates so the center is the origin
     coordinates = coordinate_helper.pbc(coordinates[1:,:]-coordinates[0,:],L)
