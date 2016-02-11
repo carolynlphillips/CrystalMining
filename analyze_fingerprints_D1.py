@@ -3,6 +3,7 @@ from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 from sklearn import metrics
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import matplotlib.cm as cm
 
 test_eps_values = False
@@ -84,10 +85,29 @@ grid = labels.reshape((nrows,ncolumns))
 ##############################################################################
 # Plot result
 
-plt.figure("Phase Diagram")
+fg=plt.figure("Phase Diagram",figsize=(10, 6), dpi=80, facecolor='w', edgecolor='k')
+
+# Using add_axes to include legend in window
+ax = fg.add_axes([0.1, 0.1, 0.6, 0.75])
+
 # Using a Qualitative Color Map from http://matplotlib.org/examples/color/colormaps_reference.html
-plt.imshow(np.flipud(grid.T), extent=(r.min(), r.max(), epsilon.min(), epsilon.max()),
+myplot=ax.imshow(np.flipud(grid.T), extent=(r.min(), r.max(), epsilon.min(), epsilon.max()),
            interpolation='nearest', cmap=cm.Paired,  aspect=0.1)
+
+#plt.colorbar()
+
+# Want to add a legend on the side that lists clusters and color code
+# May have to create my own "artists"
+cm_patches = []
+cm_patches.append(mpatches.Patch(color=myplot.cmap(myplot.norm(-1)), label='Noise'))
+for i in range(myplot.norm.vmax+1):
+    cm_patches.append(mpatches.Patch(color=myplot.cmap(myplot.norm(i)), label='Cluster label %d'%i))
+lgd = plt.legend(handles=cm_patches, loc='upper center', bbox_to_anchor=(1.2,1.1))
+
+# This may only be relevant to saving the figure
+#http://jb-blog.readthedocs.org/en/latest/posts/0012-matplotlib-legend-outdide-plot.html
+plt.additional_artists=(lgd,)
+plt.bbox_inches = 'tight'
 
 plt.ylabel('epsilon')
 plt.xlabel('r0')
